@@ -98,6 +98,98 @@
             border-radius: 8px;
             margin-top: 20px;
         }
+
+        /* Chatbot Styles */
+        #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            z-index: 1000;
+        }
+
+        #chatbot-header {
+            background-color: #1a6fc9;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #chatbot-body {
+            height: 400px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .chatbot-message {
+            margin-bottom: 10px;
+        }
+
+        .user-message {
+            text-align: right;
+        }
+
+        .bot-message {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-bubble {
+            background-color: #1a6fc9;
+            color: white;
+        }
+
+        .bot-bubble {
+            background-color: #f5f9fc;
+        }
+
+        #chatbot-input-container {
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            display: flex;
+        }
+
+        #chatbot-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        #chatbot-send {
+            background-color: #1a6fc9;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #chatbot-send:hover {
+            background-color: #145da0;
+        }
     </style>
 </head>
 <body>
@@ -210,7 +302,29 @@
         <p>Based on clinical guidelines from the National Kidney Foundation and KDIGO.</p>
     </footer>
 
+    <!-- CKD Assistant Chatbot -->
+    <div id="chatbot-container">
+        <div id="chatbot-header">
+            <span>CKD Assistant</span>
+            <span id="chatbot-toggle">-</span>
+        </div>
+        <div id="chatbot-body">
+            <div id="chatbot-messages">
+                <div class="chatbot-message bot-message">
+                    <div class="message-bubble bot-bubble">
+                        Hello! I'm here to help with questions about Chronic Kidney Disease. How can I assist you today?
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-container">
+                <input type="text" id="chatbot-input" placeholder="Type your question...">
+                <button id="chatbot-send">Send</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // CKD Risk Assessment Form Logic
         document.getElementById('ckd-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -374,6 +488,83 @@
                 durationField.value = '0';
             }
         });
+
+        // Chatbot functionality
+        const chatbotToggle = document.getElementById('chatbot-toggle');
+        const chatbotBody = document.getElementById('chatbot-body');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotSend = document.getElementById('chatbot-send');
+        
+        let isChatbotOpen = true;
+        
+        chatbotToggle.addEventListener('click', () => {
+            isChatbotOpen = !isChatbotOpen;
+            chatbotBody.style.display = isChatbotOpen ? 'flex' : 'none';
+            chatbotToggle.textContent = isChatbotOpen ? '-' : '+';
+        });
+        
+        chatbotSend.addEventListener('click', sendMessage);
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        function sendMessage() {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            chatbotInput.value = '';
+            
+            // Simulate bot response (in a real implementation, you'd call an API)
+            setTimeout(() => {
+                const response = getBotResponse(message);
+                addMessage(response, 'bot');
+            }, 500);
+        }
+        
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message ${sender}-message`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `message-bubble ${sender}-bubble`;
+            bubble.textContent = text;
+            
+            messageDiv.appendChild(bubble);
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+        
+        function getBotResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('risk') || lowerMessage.includes('chance')) {
+                return "The risk assessment tool on this page evaluates your CKD risk based on factors like age, diabetes, hypertension, and family history. For personalized results, please complete the assessment form.";
+            } 
+            else if (lowerMessage.includes('symptom') || lowerMessage.includes('sign')) {
+                return "Common CKD symptoms include fatigue, swelling in legs, changes in urination, poor appetite, and trouble sleeping. However, early CKD often has no symptoms, which is why screening is important for at-risk individuals.";
+            }
+            else if (lowerMessage.includes('prevent') || lowerMessage.includes('avoid')) {
+                return "To help prevent CKD: 1) Control blood pressure, 2) Manage diabetes carefully, 3) Maintain a healthy weight, 4) Stay hydrated, 5) Avoid excessive NSAID pain medications, 6) Don't smoke, 7) Get regular exercise.";
+            }
+            else if (lowerMessage.includes('test') || lowerMessage.includes('diagnose')) {
+                return "CKD is diagnosed through blood tests (eGFR) and urine tests (ACR). The National Kidney Foundation recommends annual screening if you have diabetes, hypertension, or family history of kidney disease.";
+            }
+            else if (lowerMessage.includes('treatment') || lowerMessage.includes('cure')) {
+                return "While CKD is often progressive, treatments can slow progression: 1) Medications to control BP and protect kidneys, 2) Dietary changes, 3) Managing underlying conditions, 4) In advanced cases, dialysis or transplant may be needed.";
+            }
+            else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                return "Hello! I'm the CKD Assistant. I can help answer questions about chronic kidney disease, its risk factors, symptoms, and prevention. What would you like to know?";
+            }
+            else if (lowerMessage.includes('thank')) {
+                return "You're welcome! Let me know if you have any other questions about kidney health.";
+            }
+            else {
+                return "I'm here to help with CKD-related questions. You might ask about: risk factors, symptoms, prevention, testing, or treatment options. For medical advice, please consult your healthcare provider.";
+            }
+        }
     </script>
 </body>
 </html>
